@@ -11,12 +11,12 @@ float humid;
 bool pumpState = false;
 bool fanState = false;
 int modeButtonPin = 11;
-int upButton = 10;
-int downButton = 9;
+int upButtonPin = 10;
+int downButtonPin = 9;
 int screenMode = 0;
 
 int modeButtonState;
-int lastModeButtonState = HIGH;
+int lastModeButtonState = LOW;
 unsigned long lastDebounceTime = 0;
 unsigned long debounceDelay = 50;
 
@@ -31,9 +31,6 @@ void setup() {
 
 void loop(){
   buttonCheck();
-  lcd.clear();
-  lcd.setCursor(0,0);
-  lcd.print(screenMode);
 }
 
 void buttonCheck(){
@@ -49,15 +46,39 @@ void modeButtonCheck(){
   if ((millis() - lastDebounceTime) > debounceDelay) {
     if (modeButtonReading != modeButtonState) {
       modeButtonState = modeButtonReading;
-      if (modeButtonState==LOW) {
+      if (modeButtonState==HIGH) {
         screenMode++;
+        if(screenMode>2){
+          screenMode=0;
+        }
+        mainDisplay();
       }
     }
   }
+  lastModeButtonState = modeButtonReading;
+}
+
+void mainDisplay(){
+ switch(screenMode){
+  case 0:{
+    thermoHygroDisplay();
+  }
+  break;
+
+  case 1:{
+    systemStateDisplay();
+  }
+  break;
+
+  case 2:{
+    pumpTimerDisplay();
+  }
+  break;
+ }
 }
 
 
-void ThermoHygroDisplay(){
+void thermoHygroDisplay(){
   temp = dht.readTemperature();
   humid = dht.readHumidity();
   lcd.clear();
