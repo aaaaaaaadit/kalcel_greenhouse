@@ -17,8 +17,11 @@ int screenMode = 0;
 
 int modeButtonState;
 int lastModeButtonState = LOW;
-unsigned long lastDebounceTime = 0;
-unsigned long debounceDelay = 50;
+unsigned long modeLastDebounceTime = 0;
+unsigned long modeDebounceDelay = 50;
+
+unsigned long dispUpdatePreviousMillis = 0;
+const long dispUpdateInterval = 1000;
 
 void setup() {
   dht.begin();
@@ -30,20 +33,24 @@ void setup() {
 }
 
 void loop(){
+  readSensor();
   buttonCheck();
+  updateDisplay();
+
 }
 
 void buttonCheck(){
   modeButtonCheck();
-  
+  //upButtonCheck();
+  //downButtonCheck();
 }
 
 void modeButtonCheck(){
   int modeButtonReading = digitalRead(modeButtonPin);
   if(modeButtonReading != lastModeButtonState) {
-    lastDebounceTime = millis();
+    modeLastDebounceTime = millis();
   }
-  if ((millis() - lastDebounceTime) > debounceDelay) {
+  if ((millis() - modeLastDebounceTime) > modeDebounceDelay) {
     if (modeButtonReading != modeButtonState) {
       modeButtonState = modeButtonReading;
       if (modeButtonState==HIGH) {
@@ -51,36 +58,34 @@ void modeButtonCheck(){
         if(screenMode>2){
           screenMode=0;
         }
-        mainDisplay();
+        switch(screenMode){
+          case 0:{
+            pumpTimerDisplay();
+          }
+          break;
+
+          case 1:{
+            thermoHygroDisplay();
+          }
+          break;
+
+          case 2:{
+            systemStateDisplay();
+          }
+          break;
+        }
       }
     }
   }
   lastModeButtonState = modeButtonReading;
 }
 
-void mainDisplay(){
- switch(screenMode){
-  case 0:{
-    thermoHygroDisplay();
-  }
-  break;
-
-  case 1:{
-    systemStateDisplay();
-  }
-  break;
-
-  case 2:{
-    pumpTimerDisplay();
-  }
-  break;
- }
-}
-
-
-void thermoHygroDisplay(){
+void readSensor(){
   temp = dht.readTemperature();
   humid = dht.readHumidity();
+}
+
+void thermoHygroDisplay(){
   lcd.clear();
   lcd.setCursor(0,0);
   lcd.print("TEMP  : ");
@@ -124,4 +129,27 @@ void pumpTimerDisplay(){
     lcd.print("STOP IN ");
   }
   lcd.print("00:00:00");
+}
+
+void updateDisplay(){
+  unsigned long dispUpdateCurrentMillis = millis();
+  if(dispUpdateCurrentMillis - dispUpdatePreviousMillis >= dispUpdateInterval){
+    dispUpdatePreviousMillis = dispUpdateCurrentMillis;
+    switch(screenMode){
+      case 0:{
+        pumpTimerDisplay();
+      }
+      break;
+
+      case 1:{
+        thermoHygroDisplay();
+      }
+      break;
+
+      case 2:{
+        systemStateDisplay();
+      }
+      break;
+    }
+  }
 }
