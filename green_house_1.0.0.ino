@@ -8,11 +8,13 @@ DHT dht(DHTPIN, DHTTYPE);
 
 float temp;
 float humid;
-bool pumpState = false;
-bool fanState = false;
+
 int modeButtonPin = 11;
 int upButtonPin = 10;
 int downButtonPin = 9;
+int pumpPin = 12;
+int fanPin = 13;
+
 int screenMode = 0;
 
 int modeButtonState;
@@ -21,7 +23,7 @@ unsigned long modeLastDebounceTime = 0;
 unsigned long modeDebounceDelay = 50;
 
 unsigned long dispUpdatePreviousMillis = 0;
-const long dispUpdateInterval = 1000;
+const long dispUpdateInterval = 10000;
 
 void setup() {
   dht.begin();
@@ -30,10 +32,16 @@ void setup() {
   lcd.begin();
 
   pinMode(modeButtonPin,INPUT_PULLUP);
+  pinMode(upButtonPin, INPUT_PULLUP);
+  pinMode(downButtonPin, INPUT_PULLUP);
+  pinMode(pumpPin, OUTPUT);
+  pinMode(fanPin, OUTPUT);
 }
 
 void loop(){
   readSensor();
+  fanAction();
+  pumpAction();
   buttonCheck();
   updateDisplay();
 
@@ -85,6 +93,18 @@ void readSensor(){
   humid = dht.readHumidity();
 }
 
+void fanAction(){
+  if(temp >= 35){
+    digitalWrite(fanPin, HIGH);
+  }else{
+    digitalWrite(fanPin,LOW);
+  }return;
+}
+
+void pumpAction(){
+  digitalWrite(pumpPin, HIGH);
+}
+
 void thermoHygroDisplay(){
   lcd.clear();
   lcd.setCursor(0,0);
@@ -101,13 +121,13 @@ void thermoHygroDisplay(){
 void systemStateDisplay(){
   lcd.clear();
   lcd.setCursor(0,0);
-  if (fanState==false){
+  if(digitalRead(fanPin)==0){
     lcd.print("FAN OFF");
-  } else {
+  }else{
     lcd.print("FAN RUNNING");
   }
   lcd.setCursor(0,1);
-  if(pumpState==false){
+  if(digitalRead(pumpPin)==0){
     lcd.print("PUMP OFF");
   }else{
     lcd.print("PUMP RUNNING");
@@ -117,13 +137,13 @@ void systemStateDisplay(){
 void pumpTimerDisplay(){
   lcd.clear();
   lcd.setCursor(0,0);
-  if (pumpState==false){
+  if (digitalRead(pumpPin)==0){
     lcd.print("IDLE.");
   }else{
     lcd.print("PUMPING...");
   }
   lcd.setCursor(0,1);
-  if (pumpState==false){
+  if (digitalRead(pumpPin)==0){
     lcd.print("PUMP IN ");
   }else{
     lcd.print("STOP IN ");
