@@ -1,44 +1,65 @@
 #include <LiquidCrystal_I2C.h>
 LiquidCrystal_I2C lcd(0x27, 16, 2);
 
-#include <DHT.h>
+#include <DHT.h>                                   //DHT11 Sensor
 #define DHTPIN 7
 #define DHTTYPE DHT11
 DHT dht(DHTPIN, DHTTYPE);
 
-float temp;
+float temp;                                        //Temp & humidity variables
 float humid;
 
-int modeButtonPin = 11;
+int HRS;
+int MIN;
+int SEC;
+
+int defHRS;
+int defMIN;
+int defSEC;
+
+int modeButtonPin = 11;                            //Pins mapping
 int upButtonPin = 10;
 int downButtonPin = 9;
 int pumpPin = 12;
 int fanPin = 13;
 
-int screenMode = 0;
+int screenMode = 4;                                //Screen modes
 
-int modeButtonState;
+int timerMode = 0;                                 //Timer modes
+
+int modeButtonState;                               //Button debouncing
 int lastModeButtonState = LOW;
 unsigned long modeLastDebounceTime = 0;
 unsigned long modeDebounceDelay = 50;
 
-unsigned long dispUpdatePreviousMillis = 0;
+int upButtonState;
+int lastUpButtonState = LOW;
+unsigned long upLastDebounceTime = 0;
+unsigned long upDebounceDelay = 50;
+
+int downButtonState;
+int lastDownButtonState = LOW;
+unsigned long downLastDebounceTime = 0;
+unsigned long downDebounceDelay = 50;
+
+unsigned long dispUpdatePreviousMillis = 0;        //Screen refresh interval
 const long dispUpdateInterval = 10000;
 
-void setup() {
+void setup() {                                     //Components initialization
   dht.begin();
   
   lcd.backlight();
   lcd.begin();
 
-  pinMode(modeButtonPin,INPUT_PULLUP);
+  pinMode(modeButtonPin,INPUT_PULLUP);             //Pins initialization
   pinMode(upButtonPin, INPUT_PULLUP);
   pinMode(downButtonPin, INPUT_PULLUP);
   pinMode(pumpPin, OUTPUT);
   pinMode(fanPin, OUTPUT);
 }
 
-void loop(){
+void loop(){                                       //Main functions in loop
+  startTimer();
   readSensor();
   fanAction();
   pumpAction();
@@ -49,7 +70,7 @@ void loop(){
 
 void buttonCheck(){
   modeButtonCheck();
-  //upButtonCheck();
+  upButtonCheck();
   //downButtonCheck();
 }
 
@@ -63,34 +84,59 @@ void modeButtonCheck(){
       modeButtonState = modeButtonReading;
       if (modeButtonState==HIGH) {
         screenMode++;
-        if(screenMode>2){
+        if(screenMode>4){
           screenMode=0;
         }
-        switch(screenMode){
-          case 0:{
-            pumpTimerDisplay();
-          }
-          break;
-
-          case 1:{
-            thermoHygroDisplay();
-          }
-          break;
-
-          case 2:{
-            systemStateDisplay();
-          }
-          break;
-        }
+        mainDisplay();
       }
     }
   }
   lastModeButtonState = modeButtonReading;
 }
 
+void upButtonCheck(){
+ int upButtonReading = digitalRead(upButtonPin);
+  if(upButtonReading != lastUpButtonState) {
+    upLastDebounceTime = millis();
+  }
+  if ((millis() - upLastDebounceTime) > upDebounceDelay) {
+    if (upButtonReading != upButtonState) {
+      upButtonState = upButtonReading;
+      if (upButtonState==HIGH) {
+        switch(screenMode){
+          
+          case 3:{
+            defMIN++;
+            if(defMIN>59){
+              defMIN=0;
+            }
+          }
+          break;
+          
+          case 4:{
+            defHRS++;
+            if(defHRS>24){
+              defHRS=0;
+            }
+          }
+          break;
+        }
+        mainDisplay();  //refresh main display after button press
+      }
+    }
+  }
+  lastUpButtonState = upButtonReading;
+}
+
 void readSensor(){
   temp = dht.readTemperature();
   humid = dht.readHumidity();
+}
+
+void startTimer(){
+  HRS = 1;
+  MIN = 15;
+  SEC = 0;
 }
 
 void fanAction(){
@@ -151,25 +197,55 @@ void pumpTimerDisplay(){
   lcd.print("00:00:00");
 }
 
-void updateDisplay(){
-  unsigned long dispUpdateCurrentMillis = millis();
-  if(dispUpdateCurrentMillis - dispUpdatePreviousMillis >= dispUpdateInterval){
-    dispUpdatePreviousMillis = dispUpdateCurrentMillis;
-    switch(screenMode){
-      case 0:{
-        pumpTimerDisplay();
-      }
-      break;
+void setPumpTime(){
+  lcd.clear();
+  lcd.setCursor(0,0);
+  lcd.print("PUMP TIME (MIN):");
+  lcd.setCursor(0,1);
+  lcd.print(defMIN);
+}
 
-      case 1:{
+void setIdleTime(){
+  lcd.clear();
+  lcd.setCursor(0,0);
+  lcd.print("IDLE TIME (HRS):");
+  lcd.setCursor(0,1);
+  lcd.print(defHRS);
+}
+
+void mainDisplay(){
+     switch(screenMode){
+      case 0:{
         thermoHygroDisplay();
       }
       break;
 
-      case 2:{
+      case 1:{
         systemStateDisplay();
       }
       break;
+
+      case 2:{
+        pumpTimerDisplay();
+      }
+      break;
+
+      case 3:{
+        setPumpTime();
+      }
+      break;
+
+      case 4:{
+        setIdleTime();
+      }
+      break;
     }
+}
+
+void updateDisplay(){
+  unsigned long dispUpdateCurrentMillis = millis();
+  if(dispUpdateCurrentMillis - dispUpdatePreviousMillis >= dispUpdateInterval){
+    dispUpdatePreviousMillis = dispUpdateCurrentMillis;
+    mainDisplay();
   }
 }
