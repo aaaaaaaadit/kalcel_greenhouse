@@ -8,8 +8,9 @@ DHT dht(DHTPIN, DHTTYPE);
 
 float temp;                                        //Temp & humidity variables
 float humid;
+float tempThreshold = 30;
 
-int HRS;
+int HRS;                                           //Timer variables
 int MIN;
 int SEC;
 
@@ -23,7 +24,7 @@ int downButtonPin = 9;
 int pumpPin = 12;
 int fanPin = 13;
 
-int screenMode = 4;                                //Screen modes
+int screenMode = 5;                                //Screen modes
 
 int timerMode = 0;                                 //Timer modes
 
@@ -84,7 +85,7 @@ void modeButtonCheck(){
       modeButtonState = modeButtonReading;
       if (modeButtonState==HIGH) {
         screenMode++;
-        if(screenMode>4){
+        if(screenMode>5){
           screenMode=0;
         }
         mainDisplay();
@@ -120,6 +121,14 @@ void upButtonCheck(){
             }
           }
           break;
+
+          case 5:{
+            tempThreshold++;
+            if(tempThreshold > 45){
+              tempThreshold = 45;
+            }
+          }
+          break;
         }
         mainDisplay();  //refresh main display after button press
       }
@@ -140,7 +149,7 @@ void startTimer(){
 }
 
 void fanAction(){
-  if(temp >= 35){
+  if(temp >= tempThreshold){
     digitalWrite(fanPin, HIGH);
   }else{
     digitalWrite(fanPin,LOW);
@@ -148,7 +157,7 @@ void fanAction(){
 }
 
 void pumpAction(){
-  digitalWrite(pumpPin, HIGH);
+  digitalWrite(pumpPin, LOW);
 }
 
 void thermoHygroDisplay(){
@@ -168,13 +177,13 @@ void systemStateDisplay(){
   lcd.clear();
   lcd.setCursor(0,0);
   if(digitalRead(fanPin)==0){
-    lcd.print("FAN OFF");
+    lcd.print("FAN IDLE");
   }else{
     lcd.print("FAN RUNNING");
   }
   lcd.setCursor(0,1);
   if(digitalRead(pumpPin)==0){
-    lcd.print("PUMP OFF");
+    lcd.print("PUMP IDLE");
   }else{
     lcd.print("PUMP RUNNING");
   }
@@ -200,7 +209,7 @@ void pumpTimerDisplay(){
 void setPumpTime(){
   lcd.clear();
   lcd.setCursor(0,0);
-  lcd.print("PUMP TIME (MIN):");
+  lcd.print("PUMP TIME(MIN):");
   lcd.setCursor(0,1);
   lcd.print(defMIN);
 }
@@ -208,9 +217,19 @@ void setPumpTime(){
 void setIdleTime(){
   lcd.clear();
   lcd.setCursor(0,0);
-  lcd.print("IDLE TIME (HRS):");
+  lcd.print("IDLE TIME(HRS):");
   lcd.setCursor(0,1);
   lcd.print(defHRS);
+}
+
+void setThresholdTemp(){
+  lcd.clear();
+  lcd.setCursor(0,0);
+  lcd.print("FAN RUN TEMP(");
+  lcd.print((char)223);
+  lcd.print("C)");
+  lcd.setCursor(0,1);
+  lcd.print(tempThreshold,0);
 }
 
 void mainDisplay(){
@@ -239,6 +258,10 @@ void mainDisplay(){
         setIdleTime();
       }
       break;
+
+      case 5:{
+        setThresholdTemp();
+      }
     }
 }
 
