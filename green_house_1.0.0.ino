@@ -72,7 +72,7 @@ void loop(){                                       //Main functions in loop
 void buttonCheck(){
   modeButtonCheck();
   upButtonCheck();
-  //downButtonCheck();
+  downButtonCheck();
 }
 
 void modeButtonCheck(){
@@ -104,7 +104,7 @@ void upButtonCheck(){
     if (upButtonReading != upButtonState) {
       upButtonState = upButtonReading;
       if (upButtonState==HIGH) {
-        switch(screenMode){
+        switch(screenMode){                          //The button function
           
           case 3:{
             defMIN++;
@@ -130,11 +130,53 @@ void upButtonCheck(){
           }
           break;
         }
-        mainDisplay();  //refresh main display after button press
+        mainDisplay();                                //refresh main display after button press
       }
     }
   }
   lastUpButtonState = upButtonReading;
+}
+
+void downButtonCheck(){
+ int downButtonReading = digitalRead(downButtonPin);
+  if(downButtonReading != lastDownButtonState) {
+    downLastDebounceTime = millis();
+  }
+  if ((millis() - downLastDebounceTime) > downDebounceDelay) {
+    if (downButtonReading != downButtonState) {
+      downButtonState = downButtonReading;
+      if (downButtonState==HIGH) {
+        switch(screenMode){                             //The Button Function
+          
+          case 3:{
+            defMIN--;
+            if(defMIN<0){
+              defMIN=59;
+            }
+          }
+          break;
+          
+          case 4:{
+            defHRS--;
+            if(defHRS<0){
+              defHRS=24;
+            }
+          }
+          break;
+
+          case 5:{
+            tempThreshold--;
+            if(tempThreshold < 0){
+              tempThreshold = 0;
+            }
+          }
+          break;
+        }
+        mainDisplay();                              //refresh main display after button press
+      }
+    }
+  }
+  lastDownButtonState = downButtonReading;
 }
 
 void readSensor(){
