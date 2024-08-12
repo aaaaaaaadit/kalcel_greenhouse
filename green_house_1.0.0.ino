@@ -21,8 +21,9 @@ int defSEC;
 int modeButtonPin = 11;                            //Pins mapping
 int upButtonPin = 10;
 int downButtonPin = 9;
-int pumpPin = 12;
-int fanPin = 13;
+int pumpPin = 6;
+int fanPin = 5;
+int sparePin = 4;                                  //spare pin for additional control
 
 int screenMode = 5;                                //Screen modes
 
@@ -192,9 +193,9 @@ void startTimer(){
 
 void fanAction(){
   if(temp >= tempThreshold){
-    digitalWrite(fanPin, HIGH);
+    digitalWrite(fanPin, LOW);
   }else{
-    digitalWrite(fanPin,LOW);
+    digitalWrite(fanPin,HIGH);
   }return;
 }
 
@@ -218,14 +219,14 @@ void thermoHygroDisplay(){
 void systemStateDisplay(){
   lcd.clear();
   lcd.setCursor(0,0);
-  if(digitalRead(fanPin)==0){
-    lcd.print("FAN IDLE");
+  if(digitalRead(fanPin)==1){
+    lcd.print("FAN STOPPED");
   }else{
     lcd.print("FAN RUNNING");
   }
   lcd.setCursor(0,1);
-  if(digitalRead(pumpPin)==0){
-    lcd.print("PUMP IDLE");
+  if(digitalRead(pumpPin)==1){
+    lcd.print("PUMP STOPPED");
   }else{
     lcd.print("PUMP RUNNING");
   }
@@ -234,18 +235,20 @@ void systemStateDisplay(){
 void pumpTimerDisplay(){
   lcd.clear();
   lcd.setCursor(0,0);
-  if (digitalRead(pumpPin)==0){
-    lcd.print("IDLE.");
+  if (digitalRead(pumpPin)==1){
+    lcd.print("PUMP STOPPED,");
   }else{
-    lcd.print("PUMPING...");
+    lcd.print("PUMP RUNNING...");
   }
   lcd.setCursor(0,1);
-  if (digitalRead(pumpPin)==0){
-    lcd.print("PUMP IN ");
+  if (digitalRead(pumpPin)==1){
+    lcd.print("RUN IN ");
   }else{
     lcd.print("STOP IN ");
   }
-  lcd.print("00:00:00");
+  lcd.print(HRS);
+  lcd.print(":");
+  lcd.print(MIN);
 }
 
 void setPumpTime(){
