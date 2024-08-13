@@ -14,8 +14,8 @@ int HRS;                                           //Timer variables
 int MIN;
 int SEC;
 
-int defHRS;
-int defMIN;
+int defHRS=1;
+int defMIN=15;
 int defSEC;
 
 int modeButtonPin = 11;                            //Pins mapping
@@ -118,15 +118,15 @@ void upButtonCheck(){
           case 4:{
             defHRS++;
             if(defHRS>24){
-              defHRS=0;
+              defHRS=1;
             }
           }
           break;
 
           case 5:{
             tempThreshold++;
-            if(tempThreshold > 45){
-              tempThreshold = 45;
+            if(tempThreshold > 43){
+              tempThreshold = 43;
             }
           }
           break;
@@ -159,7 +159,7 @@ void downButtonCheck(){
           
           case 4:{
             defHRS--;
-            if(defHRS<0){
+            if(defHRS<1){
               defHRS=24;
             }
           }
@@ -167,8 +167,8 @@ void downButtonCheck(){
 
           case 5:{
             tempThreshold--;
-            if(tempThreshold < 0){
-              tempThreshold = 0;
+            if(tempThreshold < 16){
+              tempThreshold = 16;
             }
           }
           break;
