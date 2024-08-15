@@ -8,15 +8,19 @@ DHT dht(DHTPIN, DHTTYPE);
 
 float temp;                                        //Temp & humidity variables
 float humid;
-float tempThreshold = 30;
+float tempThreshold = 35;
 
 int HRS;                                           //Timer variables
 int MIN;
 int SEC;
-
 int defHRS=1;
 int defMIN=15;
 int defSEC;
+int timerMode = 0;  
+unsigned long timerPreviousMillis = 0;
+const long timerInterval = 1000;                               
+
+
 
 int modeButtonPin = 11;                            //Pins mapping
 int upButtonPin = 10;
@@ -26,8 +30,6 @@ int fanPin = 5;
 int sparePin = 4;                                  //spare pin for additional control
 
 int screenMode = 5;                                //Screen modes
-
-int timerMode = 0;                                 //Timer modes
 
 int modeButtonState;                               //Button debouncing
 int lastModeButtonState = LOW;
@@ -64,7 +66,7 @@ void loop(){                                       //Main functions in loop
   startTimer();
   readSensor();
   fanAction();
-  pumpAction();
+  //pumpAction();
   buttonCheck();
   updateDisplay();
 
@@ -185,10 +187,39 @@ void readSensor(){
   humid = dht.readHumidity();
 }
 
+void timerCycle(){ 
+  digitalWrite(pumpPin,HIGH);
+  SEC--;
+  if(SEC<0){
+    SEC=59;
+    MIN=MIN-1;
+  }
+  if(MIN<0){
+    MIN=59;
+    HRS=HRS-1;
+  }
+  if(HRS<0){
+    if(digitalRead(pumpPin==0)){
+      digitalWrite(pumpPin,HIGH);
+      HRS=defHRS;
+      MIN=0;
+      SEC=0;
+    } else {
+      digitalWrite(pumpPin,LOW);
+      HRS=0;
+      MIN=defMIN;
+      SEC=0;
+    }
+  }
+}
+
+
 void startTimer(){
-  HRS = 1;
-  MIN = 15;
-  SEC = 0;
+  unsigned long timerCurrentMillis = millis();
+  if (timerCurrentMillis - timerPreviousMillis >= timerInterval) {
+    timerPreviousMillis = timerCurrentMillis;
+    timerCycle();
+  }
 }
 
 void fanAction(){
