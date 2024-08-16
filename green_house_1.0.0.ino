@@ -16,7 +16,7 @@ int SEC;
 int defHRS=1;
 int defMIN=15;
 int defSEC;
-int timerMode = 0;  
+int pumpState = HIGH;  
 unsigned long timerPreviousMillis = 0;
 const long timerInterval = 1000;                               
 
@@ -63,10 +63,9 @@ void setup() {                                     //Components initialization
 }
 
 void loop(){                                       //Main functions in loop
-  startTimer();
+  pumpTimer();
   readSensor();
   fanAction();
-  //pumpAction();
   buttonCheck();
   updateDisplay();
 
@@ -187,38 +186,33 @@ void readSensor(){
   humid = dht.readHumidity();
 }
 
-void timerCycle(){ 
-  digitalWrite(pumpPin,HIGH);
-  SEC--;
-  if(SEC<0){
-    SEC=59;
-    MIN=MIN-1;
-  }
-  if(MIN<0){
-    MIN=59;
-    HRS=HRS-1;
-  }
-  if(HRS<0){
-    if(digitalRead(pumpPin==0)){
-      digitalWrite(pumpPin,HIGH);
-      HRS=defHRS;
-      MIN=0;
-      SEC=0;
-    } else {
-      digitalWrite(pumpPin,LOW);
-      HRS=0;
-      MIN=defMIN;
-      SEC=0;
+void pumpTimer(){ 
+unsigned long timerCurrentMillis=millis();
+  if(timerCurrentMillis-timerPreviousMillis>=timerInterval){
+    timerPreviousMillis=timerCurrentMillis;
+    SEC--;
+    if(SEC<0){
+      SEC=59;
+      MIN--;
+      if(MIN<0){
+        MIN=59;
+        HRS--;
+        if(HRS<0){
+          if(pumpState==LOW){
+            pumpState=HIGH;
+            HRS=defHRS;
+            MIN=0;
+            SEC=0;
+          }else{
+            pumpState=LOW;
+            HRS=0;
+            MIN=defMIN;
+            SEC=0;
+          }
+        }
+      } 
     }
-  }
-}
-
-
-void startTimer(){
-  unsigned long timerCurrentMillis = millis();
-  if (timerCurrentMillis - timerPreviousMillis >= timerInterval) {
-    timerPreviousMillis = timerCurrentMillis;
-    timerCycle();
+    digitalWrite(pumpPin,pumpState);
   }
 }
 
@@ -230,9 +224,6 @@ void fanAction(){
   }return;
 }
 
-void pumpAction(){
-  digitalWrite(pumpPin, LOW);
-}
 
 void thermoHygroDisplay(){
   lcd.clear();
@@ -251,34 +242,37 @@ void systemStateDisplay(){
   lcd.clear();
   lcd.setCursor(0,0);
   if(digitalRead(fanPin)==1){
-    lcd.print("FAN STOPPED");
+    lcd.print("FAN OFF");
   }else{
-    lcd.print("FAN RUNNING");
+    lcd.print("FAN ON");
   }
   lcd.setCursor(0,1);
-  if(digitalRead(pumpPin)==1){
-    lcd.print("PUMP STOPPED");
+  if(pumpState=HIGH){
+    lcd.print("PUMP OFF");
   }else{
-    lcd.print("PUMP RUNNING");
+    lcd.print("PUMP ON");
   }
 }
 
 void pumpTimerDisplay(){
   lcd.clear();
   lcd.setCursor(0,0);
-  if (digitalRead(pumpPin)==1){
-    lcd.print("PUMP STOPPED,");
+  if (pumpState==HIGH){
+    lcd.print("PUMP OFF, TURN ");
   }else{
-    lcd.print("PUMP RUNNING...");
+    lcd.print("PUMP ON, TURN ");
   }
   lcd.setCursor(0,1);
-  if (digitalRead(pumpPin)==1){
-    lcd.print("RUN IN ");
+  if (pumpState==HIGH){
+    lcd.print("ON IN ");
   }else{
-    lcd.print("STOP IN ");
+    lcd.print("OFF IN ");
   }
   lcd.print(HRS);
   lcd.print(":");
+  if(MIN<10){
+    lcd.print("0");
+  }
   lcd.print(MIN);
 }
 
