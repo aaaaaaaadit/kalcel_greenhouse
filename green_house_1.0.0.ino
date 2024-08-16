@@ -270,10 +270,10 @@ void pumpTimerDisplay(){
   }
   lcd.print(HRS);
   lcd.print(":");
-  if(MIN<10){
+  if(MIN<9){
     lcd.print("0");
   }
-  lcd.print(MIN);
+  lcd.print(MIN+1);
 }
 
 void setPumpTime(){
