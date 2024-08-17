@@ -58,8 +58,14 @@ void setup() {                                     //Components initialization
   pinMode(modeButtonPin,INPUT_PULLUP);             //Pins initialization
   pinMode(upButtonPin, INPUT_PULLUP);
   pinMode(downButtonPin, INPUT_PULLUP);
+  
   pinMode(pumpPin, OUTPUT);
   pinMode(fanPin, OUTPUT);
+  pinMode(sparePin,OUTPUT);
+  
+  digitalWrite(pumpPin,HIGH);
+  digitalWrite(fanPin,HIGH);
+  digitalWrite(sparePin,HIGH);
 }
 
 void loop(){                                       //Main functions in loop
