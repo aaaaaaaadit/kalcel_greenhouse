@@ -96,7 +96,7 @@ void modeButtonCheck(){
       modeButtonState = modeButtonReading;
       if (modeButtonState==LOW) {
         screenMode++;
-        if(screenMode>5){
+        if(screenMode>4){
           screenMode=0;
         }
         mainDisplay();
@@ -117,7 +117,7 @@ void upButtonCheck(){
       if (upButtonState==LOW) {
         switch(screenMode){                          //The button function
           
-          case 3:{
+          case 2:{
             defMIN++;
             if(defMIN>59){
               defMIN=0;
@@ -125,7 +125,7 @@ void upButtonCheck(){
           }
           break;
           
-          case 4:{
+          case 3:{
             defHRS++;
             if(defHRS>24){
               defHRS=1;
@@ -133,7 +133,7 @@ void upButtonCheck(){
           }
           break;
 
-          case 5:{
+          case 4:{
             tempThreshold++;
             if(tempThreshold > 43){
               tempThreshold = 43;
@@ -159,7 +159,7 @@ void downButtonCheck(){
       if (downButtonState==LOW) {
         switch(screenMode){                             //The Button Function
           
-          case 3:{
+          case 2:{
             defMIN--;
             if(defMIN<0){
               defMIN=59;
@@ -167,7 +167,7 @@ void downButtonCheck(){
           }
           break;
           
-          case 4:{
+          case 3:{
             defHRS--;
             if(defHRS<1){
               defHRS=24;
@@ -175,7 +175,7 @@ void downButtonCheck(){
           }
           break;
 
-          case 5:{
+          case 4:{
             tempThreshold--;
             if(tempThreshold < 16){
               tempThreshold = 16;
@@ -234,34 +234,31 @@ void fanAction(){
 }
 
 
-void thermoHygroDisplay(){
+void statusDisplay(){
   lcd.clear();
   lcd.setCursor(0,0);
-  lcd.print("TEMP  : ");
   lcd.print(temp,1);
   lcd.print((char)223);
   lcd.print("C");
   lcd.setCursor(0,1);
-  lcd.print("HUMID : ");
-  lcd.print(humid,1);
+  lcd.print(humid,0);
   lcd.print(" %");
-}
-
-void systemStateDisplay(){
-  lcd.clear();
-  lcd.setCursor(0,0);
   if(digitalRead(fanPin)==1){
+    lcd.setCursor(9,0);
     lcd.print("FAN OFF");
   }else{
+    lcd.setCursor(10,0);
     lcd.print("FAN ON");
   }
-  lcd.setCursor(0,1);
-  if(pumpState==HIGH){
+  if(pumpState=HIGH){
+    lcd.setCursor(8,1);
     lcd.print("PUMP OFF");
   }else{
+    lcd.setCursor(9,1);
     lcd.print("PUMP ON");
   }
 }
+
 
 void pumpTimerDisplay(){
   lcd.clear();
@@ -321,31 +318,26 @@ void setThresholdTemp(){
 void mainDisplay(){
      switch(screenMode){
       case 0:{
-        thermoHygroDisplay();
+        statusDisplay();
       }
       break;
 
       case 1:{
-        systemStateDisplay();
-      }
-      break;
-
-      case 2:{
         pumpTimerDisplay();
       }
       break;
 
-      case 3:{
+      case 2:{
         setPumpTime();
       }
       break;
 
-      case 4:{
+      case 3:{
         setIdleTime();
       }
       break;
 
-      case 5:{
+      case 4:{
         setThresholdTemp();
       }
     }
